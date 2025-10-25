@@ -1,10 +1,13 @@
 package com._DMetaverse.backend.models;
 
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -27,6 +30,29 @@ public class User {
 
     @Column(name="refresh_token")
     private String refreshToken;
+
+    @OneToMany(mappedBy="owner")
+    private List<Room> ownedRooms;
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setAvatarId(Integer avatarId) {
+        this.avatarId = avatarId;
+    }
+
+    public List<Room> getOwnedRooms() {
+        return ownedRooms;
+    }
+
+    public void setOwnedRooms(List<Room> ownedRooms) {
+        this.ownedRooms = ownedRooms;
+    }
 
     public Long getId() {
         return id;
