@@ -6,7 +6,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name="maps")
 public class Map {
@@ -20,28 +26,4 @@ public class Map {
 
     @Column(name="map_data", columnDefinition="TEXT")
     private String mapData;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getMapName() {
-        return mapName;
-    }
-
-    public void setMapName(String mapName) {
-        this.mapName = mapName;
-    }
-
-    public String getMapData() {
-        return mapData;
-    }
-
-    public void setMapData(String mapData) {
-        this.mapData = mapData;
-    }
 }
