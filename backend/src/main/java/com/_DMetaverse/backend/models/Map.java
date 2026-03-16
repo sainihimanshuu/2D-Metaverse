@@ -18,6 +18,9 @@ public class Map {
     @Column(name="map_name")
     private String mapName;
 
+    @Column(name="map_data", columnDefinition="TEXT")
+    private String mapData;
+
     public Long getId() {
         return id;
     }
@@ -32,5 +35,13 @@ public class Map {
 
     public void setMapName(String mapName) {
         this.mapName = mapName;
+    }
+
+    public String getMapData() {
+        return mapData;
+    }
+
+    public void setMapData(String mapData) {
+        this.mapData = mapData;
     }
 }

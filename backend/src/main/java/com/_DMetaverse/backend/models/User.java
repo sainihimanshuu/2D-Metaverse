@@ -1,13 +1,17 @@
 package com._DMetaverse.backend.models;
 
-import java.util.List;
+import java.time.Instant;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -25,34 +29,20 @@ public class User {
     @Column(name="password")
     private String password;
 
-    @Column(name="avatar")
-    private Integer avatarId;
+    @ManyToOne
+    @JoinColumn(name="avatar_id")
+    private Avatar avatar;
 
     @Column(name="refresh_token")
     private String refreshToken;
 
-    @OneToMany(mappedBy="owner")
-    private List<Room> ownedRooms;
+    @CreationTimestamp
+    @Column(name="created_at", updatable=false)
+    private Instant createdAt;
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setAvatarId(Integer avatarId) {
-        this.avatarId = avatarId;
-    }
-
-    public List<Room> getOwnedRooms() {
-        return ownedRooms;
-    }
-
-    public void setOwnedRooms(List<Room> ownedRooms) {
-        this.ownedRooms = ownedRooms;
-    }
+    @UpdateTimestamp
+    @Column(name="updated_at")
+    private Instant updatedAt;
 
     public Long getId() {
         return id;
@@ -60,6 +50,14 @@ public class User {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPassword() {
@@ -70,12 +68,12 @@ public class User {
         this.password = password;
     }
 
-    public int getAvatarId() {
-        return avatarId;
+    public Avatar getAvatar() {
+        return avatar;
     }
 
-    public void setAvatarId(int avatarId) {
-        this.avatarId = avatarId;
+    public void setAvatar(Avatar avatar) {
+        this.avatar = avatar;
     }
 
     public String getRefreshToken() {
@@ -86,9 +84,11 @@ public class User {
         this.refreshToken = refreshToken;
     }
 
-    @Override
-    public String toString() {
-        return "User [id=" + id + ", password=" + password + ", avatarId=" + avatarId + ", refreshToken=" + refreshToken
-                + "]";
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
     }
 }
