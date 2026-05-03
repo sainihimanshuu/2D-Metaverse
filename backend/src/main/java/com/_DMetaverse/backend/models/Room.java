@@ -1,52 +1,43 @@
 package com._DMetaverse.backend.models;
 
-import java.time.Instant;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.Getter;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-@NoArgsConstructor
+import java.time.Instant;
+import java.util.Set;
+
 @Entity
-@Table(name="rooms")
-public class Room {
+@Table(name = "rooms", indexes = {
+    @Index(columnList = "ownerUserId")
+})
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Room {
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long roomId;
 
     @ManyToOne
-    @JoinColumn(name="owner_id")
+    @JoinColumn(name = "ownerUserId", nullable = false)
     private User owner;
 
-    @Column(name="is_public")
-    private boolean isPublic;
+    private String name;
 
-    @Column(name="room_code")
-    private String roomCode;
+    @Enumerated(EnumType.STRING)
+    private RoomType type;
 
-    @ManyToOne
-    @JoinColumn(name="map_id")
-    private Map map;
+    private Integer maxOccupancy;
 
-    @CreationTimestamp
-    @Column(name="created_at", updatable=false)
+    @Enumerated(EnumType.STRING)
+    private RoomStatus status;
+
     private Instant createdAt;
-
-    @UpdateTimestamp
-    @Column(name="updated_at")
     private Instant updatedAt;
+
+    @OneToMany(mappedBy = "room")
+    private Set<RoomMembership> memberships;
 }

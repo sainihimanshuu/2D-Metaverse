@@ -1,52 +1,45 @@
 package com._DMetaverse.backend.models;
 
-import java.time.Instant;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.Getter;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-@NoArgsConstructor
+import java.time.Instant;
+import java.util.Set;
+
 @Entity
-@Table(name="users")
+@Table(name = "users", indexes = {
+    @Index(columnList = "username", unique = true),
+    @Index(columnList = "accountStatus")
+})
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="id")
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long userId;
 
-    @Column(name="email", unique=true, nullable=false)
-    private String email;
+    @Column(nullable = false, unique = true)
+    private String username;
 
-    @Column(name="password")
-    private String password;
+    private String displayName;
 
-    @ManyToOne
-    @JoinColumn(name="avatar_id")
-    private Avatar avatar;
+    @Column(nullable = false)
+    private String passwordHash;
 
-    @Column(name="refresh_token")
-    private String refreshToken;
+    private String avatarUrl;
 
-    @CreationTimestamp
-    @Column(name="created_at", updatable=false)
+    @Column(nullable = false)
+    private String accountStatus;
+
     private Instant createdAt;
-
-    @UpdateTimestamp
-    @Column(name="updated_at")
     private Instant updatedAt;
+
+    @OneToMany(mappedBy = "user")
+    private Set<RoomMembership> memberships;
+
+    @OneToMany(mappedBy = "owner")
+    private Set<Room> ownedRooms;
 }
