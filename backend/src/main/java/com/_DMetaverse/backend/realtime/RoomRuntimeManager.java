@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com._DMetaverse.backend.dto.roomruntime.RoomSnapshot;
 import com._DMetaverse.backend.service.RoomService;
+import com.fasterxml.jackson.databind.JsonNode;
 
 @Component
 public class RoomRuntimeManager {
@@ -18,17 +19,15 @@ public class RoomRuntimeManager {
         this.activeRooms = new ConcurrentHashMap<>();
     }
 
-    public void createRoomRuntime(Long roomId) {
-        if(activeRooms.containsKey(roomId)) {
-            return;
-        }
-        
-        RoomRuntime roomRuntime = new RoomRuntime(roomId, roomService);
-        activeRooms.put(roomId, roomRuntime);
-    }
+    private RoomRuntime getOrCreateRoomRuntime(Long roomId) {
+        return activeRooms.computeIfAbsent(roomId, id -> {
+            System.out.println("Creating new room runtime for room ID: " + id);
+            RoomRuntime newRoomRuntime = new RoomRuntime(id, roomService);
 
-    public Optional<RoomRuntime> getRoomRuntime(Long roomId) {
-        return Optional.ofNullable(activeRooms.get(roomId));
+            activeRooms.put(id, newRoomRuntime);
+
+            return newRoomRuntime;
+        });
     }
 
     public void removeRoomRuntime(Long roomId) {
@@ -38,12 +37,32 @@ public class RoomRuntimeManager {
     }
 
     public RoomSnapshot getRoomSnapshot(Long roomId) {
-        Optional<RoomRuntime> roomRuntimeOpt = getRoomRuntime(roomId);
-        if(roomRuntimeOpt.isEmpty()) {
+        RoomRuntime roomRuntime = activeRooms.get(roomId);
+        if(roomRuntime == null) {
             throw new IllegalArgumentException("Room runtime not found for room ID: " + roomId);
         }
 
-        RoomRuntime roomRuntime = roomRuntimeOpt.get();
         return roomRuntime.getRoomSnapshot();
+    }
+
+    public void joinRoomRuntime(JsonNode content) {
+        Long roomId = content.get("roomId").asLong();
+        Long userId = content.get("userId").asLong();
+        String username = content.get("username").asText();
+
+        RoomRuntime roomRuntime = getOrCreateRoomRuntime(roomId);
+        roomRuntime.addUserToRoomRuntime(userId, username);
+    }
+
+    public void leaveRoomRuntime(JsonNode content) {
+        Long roomId = content.get("roomId").asLong();
+        Long userId = content.get("userId").asLong();
+
+        RoomRuntime roomRuntime = activeRooms.get(roomId);
+        if (roomRuntime == null) {
+            throw new IllegalArgumentException("Room runtime not found for room ID: " + roomId);
+        }
+
+        roomRuntime.removeUserFromRoomRuntime(userId);
     }
 }

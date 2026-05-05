@@ -25,7 +25,13 @@ public class RoomRuntime {
         }
     }
 
-    public void addUserToRoomRuntime(UserSnapshot userSnapshot) {
+    public void addUserToRoomRuntime(Long userId, String username) {
+        UserSnapshot userSnapshot = new UserSnapshot(
+            userId,
+            username,
+            0,
+            0
+        );
         activeUsers.put(userSnapshot.getUserId(), userSnapshot);
     }
 
