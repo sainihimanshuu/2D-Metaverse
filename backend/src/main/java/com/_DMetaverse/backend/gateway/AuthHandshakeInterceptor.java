@@ -1,32 +1,42 @@
 package com._DMetaverse.backend.gateway;
 
 import java.util.Map;
+import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
+import com._DMetaverse.backend.models.User;
+import com._DMetaverse.backend.repository.UserRepository;
+import com._DMetaverse.backend.util.JwtUtil;
 
 @Component
 public class AuthHandshakeInterceptor implements HandshakeInterceptor {
-    @Value("${jwt.secret}")
-    private String secretKey;
+    public static final String AUTHENTICATED_USER_ID_ATTR = "authenticatedUserId";
+    public static final String AUthENTICATED_USERNAME_ATTR = "authenticatedUsername";
+
+    private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
+
+    public AuthHandshakeInterceptor(JwtUtil jwtUtil, UserRepository userRepository){
+        this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
+    }
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, 
             WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
 
         String token = request.getHeaders().getFirst("Authorization");
-        String userId = validateTokenAndGetUserId(token);
+        Optional<User> user = validateTokenAndGetUserId(token);
 
-        if (userId != null) {
-            attributes.put("userId", userId);
+        if (user.isPresent()) {
+            User authenticatedUser = user.get();
+            attributes.put(AUTHENTICATED_USER_ID_ATTR, authenticatedUser.getUserId());
+            attributes.put(AUthENTICATED_USERNAME_ATTR, authenticatedUser.getUsername());
             return true;
         }
 
@@ -38,19 +48,16 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
     
     }
 
-    private String validateTokenAndGetUserId(String token) {
+    private Optional<User> validateTokenAndGetUserId(String token) {
         if (token != null && token.startsWith("Bearer ")) {
             String jwt = token.substring("Bearer ".length());
             try {
-                Claims claims = Jwts.parser()
-                    .setSigningKey(secretKey.getBytes())
-                    .parseClaimsJws(jwt)
-                    .getBody();
-                return claims.getSubject();
-            } catch (JwtException e) {
-                return null;
+                String username = jwtUtil.extractUsername(jwt);
+                return userRepository.findByUsername(username);
+            } catch (RuntimeException e) {
+                return Optional.empty();
             }
         }
-        return null;
+        return Optional.empty();
     }
 }

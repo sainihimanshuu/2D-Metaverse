@@ -20,12 +20,12 @@ public class AuthController {
 
     @PostMapping("/signup")
     public String signup(@RequestBody AuthRequest request) {
-        authService.signup(request.getEmail(), request.getPassword());
+        authService.signup(request.getUsername(), request.getPassword());
         return "User created";
     }
 
     @PostMapping("/login")
     public String login(@RequestBody AuthRequest request) {
-        return authService.login(request.getEmail(), request.getPassword());
+        return authService.login(request.getUsername(), request.getPassword());
     }
 }

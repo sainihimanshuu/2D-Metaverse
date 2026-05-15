@@ -1,9 +1,12 @@
 package com._DMetaverse.backend.gateway;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -13,13 +16,16 @@ import com._DMetaverse.backend.models.WebSocketMessageType;
 import com._DMetaverse.backend.service.RoomMessageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@Component
 public class RoomWebSocketHandler implements WebSocketHandler{
     private final List<WebSocketSession> sessions;
     private final RoomMessageService roomMessageService;
+    private final ObjectMapper objectMapper;
 
-    public RoomWebSocketHandler(RoomMessageService roomMessageService) {
+    public RoomWebSocketHandler(RoomMessageService roomMessageService, ObjectMapper objectMapper) {
         this.sessions = new CopyOnWriteArrayList<>();
         this.roomMessageService = roomMessageService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -35,30 +41,33 @@ public class RoomWebSocketHandler implements WebSocketHandler{
         System.out.println("Inside handleMessage, session: " + session.getId() + ", payload: " + message.getPayload());
         String payload = (String) message.getPayload();
 
-        ObjectMapper objectMapper = new ObjectMapper();
         WebSocketMessageDTO wsMessage = objectMapper.readValue(payload, WebSocketMessageDTO.class);
 
-        WebSocketMessageType type = WebSocketMessageType.valueOf(wsMessage.getType());
+        try{
+            WebSocketMessageType type = WebSocketMessageType.valueOf(wsMessage.getType());
 
-        switch (type) {
-            case WebSocketMessageType.JOIN_ROOM:
-                roomMessageService.handleJoinRoom(session, wsMessage.getContent());
-                break;
+            switch (type) {
+                case WebSocketMessageType.JOIN_ROOM:
+                    roomMessageService.handleJoinRoom(session, wsMessage.getContent());
+                    break;
 
-            case WebSocketMessageType.LEAVE_ROOM:
-                roomMessageService.handleLeaveRoom(session, wsMessage.getContent());
-                break;
+                case WebSocketMessageType.LEAVE_ROOM:
+                    roomMessageService.handleLeaveRoom(session, wsMessage.getContent());
+                    break;
 
-            case WebSocketMessageType.CHAT_MESSAGE:
-                roomMessageService.handleChatMessage(session, wsMessage.getContent());
-                break;
+                case WebSocketMessageType.CHAT_MESSAGE:
+                    roomMessageService.handleChatMessage(session, wsMessage.getContent());
+                    break;
 
-            case WebSocketMessageType.POSITION_UPDATE:
-                roomMessageService.handlePositionUpdate(session, wsMessage.getContent());
-                break;
+                case WebSocketMessageType.POSITION_UPDATE:
+                    roomMessageService.handlePositionUpdate(session, wsMessage.getContent());
+                    break;
 
-            default: 
-                System.err.println("Unknown message type: " + wsMessage.getType());
+                default: 
+                    System.err.println("Unknown message type: " + wsMessage.getType());
+            }
+        } catch (RuntimeException e){
+            sendError(session, e.getMessage());
         }
     }
 
@@ -80,5 +89,14 @@ public class RoomWebSocketHandler implements WebSocketHandler{
     @Override
     public boolean supportsPartialMessages() {
         return false;
+    }
+
+    private void sendError(WebSocketSession session, String message) throws Exception {
+        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(
+            Map.of(
+                "type", "ERROR",
+                "content", Map.of("message", message)
+            )
+        )));
     }
 }

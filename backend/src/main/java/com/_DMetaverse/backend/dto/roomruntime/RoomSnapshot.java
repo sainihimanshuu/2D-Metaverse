@@ -2,11 +2,12 @@ package com._DMetaverse.backend.dto.roomruntime;
 
 import java.time.Instant;
 import java.util.Collection;
-import java.util.List;
 
 import com._DMetaverse.backend.models.Room;
 
+import lombok.Getter;
 
+@Getter
 public class RoomSnapshot {
     private long roomId;
     private String roomName;

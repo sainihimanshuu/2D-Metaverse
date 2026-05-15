@@ -16,6 +16,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import io.jsonwebtoken.JwtException;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -38,18 +39,23 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
-            String email = jwtUtil.extractUsername(token);
 
-            if (email != null) {
-                User user = userRepository.findByUsername(email).orElse(null);
+            try {
+                String username = jwtUtil.extractUsername(token);
 
-                if (user != null) {
-                    UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(
-                            user, null, new ArrayList<>());
+                if (username != null) {
+                    User user = userRepository.findByUsername(username).orElse(null);
 
-                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    if (user != null) {
+                        UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(
+                                user, null, new ArrayList<>());
+
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
                 }
+            } catch (JwtException | IllegalArgumentException e) {
+                SecurityContextHolder.clearContext();
             }
         }
 

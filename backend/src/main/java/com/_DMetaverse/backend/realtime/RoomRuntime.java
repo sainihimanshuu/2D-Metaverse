@@ -26,6 +26,10 @@ public class RoomRuntime {
     }
 
     public void addUserToRoomRuntime(Long userId, String username) {
+        if (activeUsers.size() >= room.getMaxOccupancy() && !activeUsers.containsKey(userId)) {
+            throw new IllegalStateException("Room is full");
+        }
+
         UserSnapshot userSnapshot = new UserSnapshot(
             userId,
             username,
@@ -55,5 +59,9 @@ public class RoomRuntime {
 
     public UserSnapshot getUserSnapshot(Long userId) {
         return activeUsers.get(userId);
+    }
+
+    public boolean isEmpty() {
+        return activeUsers.isEmpty();
     }
 }

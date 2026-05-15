@@ -111,4 +111,25 @@ public class RoomService {
         return roomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room not found"));
     }
+
+    @Transactional
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
+
+    @Transactional
+    public Room validateRoomJoinAccess(Long userId, Long roomId) {
+        User user = getUserById(userId);
+        Room room = getRoomById(roomId);
+
+        if (room.getStatus() != RoomStatus.ACTIVE) {
+            throw new IllegalStateException("Room is not active");
+        }
+
+        roomMembershipRepository.findByUserAndRoom(user, room)
+                .orElseThrow(() -> new IllegalStateException("User does not have access to this room"));
+
+        return room;
+    }
 }
